@@ -2693,11 +2693,19 @@ func (s *SmD) doRedfishEndpointsPost(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if s.openchami {
 			s.lg.Printf("Payload does not contain PDUInventory key, routing to default V2 parser.")
-			if s.getSchemaVersion(w, body) > 0 { // Simplified from original
+			schemaVersion := s.getSchemaVersion(w, body)
+			if schemaVersion > 0 { 
 				err = s.parseRedfishEndpointDataV2(w, body, false)
 				if err != nil {
 					sendJsonError(w, http.StatusInternalServerError,
 						fmt.Sprintf("failed parsing post data (V2): %v", err))
+				}
+			} else {-
+				// This routes legacy requests (schemaVersion <= 0) to the old parser
+				err = s.parseRedfishEndpointData(w, eps, body) 
+				if err != nil {
+					sendJsonError(w, http.StatusInternalServerError,
+						fmt.Sprintf("failed parsing post data: %v", err))
 				}
 			}
 		}
