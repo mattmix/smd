@@ -97,6 +97,9 @@ type ServiceReservation interface {
 
 	InitInstance(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string)
 
+	//Initialize with a custom http client (for example with OAuth2 transport)
+	InitWithHTTPClient(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string, httpClient *retryablehttp.Client)
+
 	//Try to aquire locks for a list of xnames, renewing them within 30 seconds of expiration.
 	Aquire(xnames []string) error
 
@@ -177,6 +180,12 @@ func (i *Production) Init(stateManagerServer string, reservationPath string, def
 func (i *Production) InitInstance(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string) {
 	serviceName = svcName
 	i.Init(stateManagerServer, reservationPath, defaultTermMinutes, logger)
+}
+
+// Initialize with a custom http client (for example with OAuth2 transport)
+func (i *Production) InitWithHTTPClient(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string, httpClient *retryablehttp.Client) {
+	i.InitInstance(stateManagerServer, reservationPath, defaultTermMinutes, logger, svcName)
+	i.httpClient = httpClient
 }
 
 // Lets make this really simple; Im going to wake up and see what expires in the next 30 seconds;
